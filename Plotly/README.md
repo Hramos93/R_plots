@@ -1,9 +1,12 @@
 ## Assignment week 3
 ### Plotly
 
-<p> disclamer I need make this assignment this way because Rmarkdown not reder graph to plotly </p>
+<p> 
+Note: I need to do this assignment this way because Markdown doesn't read the graph to plot </p>
 
-##3 Libraries
+
+My project consists of graphing lines with the indicators obtained from World Bank Data after  I going to found indicators for my country and created a data frame,With this data frame, I am going to make a diagram
+## 3 Librarie
 
 ```{r setup, include=FALSE}
 library(wbstats); library(WDI);
