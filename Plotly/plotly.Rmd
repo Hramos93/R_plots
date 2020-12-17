@@ -2,7 +2,7 @@
 title: "Plotly"
 author: "Hramos"
 date: "17 de diciembre de 2020"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
