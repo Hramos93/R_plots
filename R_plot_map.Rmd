@@ -5,3 +5,98 @@ date: "14 de diciembre de 2020"
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, echo=TRUE, message = FALSE}
+library(rjson);library(RCurl);library(httr);
+library(dplyr);  library(data.table); suppressMessages(library(tidyverse))
+library(stringi)
+```
+
+```{r, echo=TRUE, message = FALSE}
+URL <- "https://covid19.patria.org.ve/api/v1/summary"
+```
+
+
+
+```{r, echo=TRUE , message = FALSE}
+x <- getURL(URL)
+df <- data.frame(t(fromJSON(x) %>% as.data.frame))
+df <- setDT(df, keep.rownames = TRUE)[]
+names(df)[]<- c('descrip', 'Count')
+```
+
+
+```{r, echo=TRUE}
+total <- df[1]
+byAge <- df[2:11]
+byGender <- df[12:13]
+byState <- df[14:38]
+Count <- df[39:41]
+
+```
+```{r, echo=TRUE}
+byState$descrip <- str_remove(byState$descrip, "Confirmed.ByState.")
+byState$descrip <- gsub("\\.", " ", byState$descrip)
+byState$descrip <- gsub("\\La Guaira", "Vargas", byState$descrip)
+byState$descrip <- stri_trans_general(byState$descrip, "Latin-ASCII")
+
+```
+```{r, echo=TRUE}
+stateLL<- read.csv(file = 'StateVzla.csv')
+names(stateLL)[1]<- c('descrip')
+# order
+byState <- byState[order(descrip),]
+
+```
+
+```{r, echo=TRUE, warning=FALSE}
+data <- merge(byState, stateLL, by = "descrip")
+names(data)[3:4]<- c('lat','lng')
+
+```
+```{r, echo=TRUE}
+library(leaflet)
+
+```
+
+```{r, echo=TRUE}
+bound <- data.frame(quantile(data$Count))
+names(bound)[1] <- "quantile"
+
+```
+
+
+```{r, echo=TRUE}
+getColor <- function(bound) {
+  sapply(bound$quantile, function(bound) {
+    if(bound <= 5) {
+      "green"
+    } else if(bound <= 1060) {
+      "orange"
+    } else {
+      "red"
+    } })
+}
+
+icons <- awesomeIcons(
+  icon = 'ios-close',
+  iconColor = 'black',
+  library = 'ion',
+  markerColor = getColor(bound)
+)
+
+```
+```{r, echo=TRUE}
+data %>%
+  leaflet() %>%
+  addTiles() %>% 
+  addAwesomeMarkers(lat = data$lat, lng=data$lng,icon=icons, popup=as.character(data$Count))
+
+```
+
+
+
+
+

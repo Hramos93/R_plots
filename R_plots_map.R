@@ -1,15 +1,6 @@
-#install.packages("ggplot2")
-#install.packages("rjson")
-#install.packages("jsonlite")
-#install.packages("RCurl")
-#install.packages("httr")
-#install.packages("data.table")
-#install.packages("tidyverse")
-#install.packages("stringi")
-
-library(rjson);library(jsonlite);library(RCurl)
-library(dplyr); library(httr); library(data.table); library(tidyverse)
-library(ggplot2); library(tidyr);library(stringi)
+library(rjson);library(RCurl);library(httr);
+library(dplyr);  library(data.table); library(tidyverse)
+library(stringi)
 
 URL <- "https://covid19.patria.org.ve/api/v1/summary"
 
@@ -38,5 +29,34 @@ names(stateLL)[1]<- c('descrip')
 byState <- byState[order(descrip),]
 
 data <- merge(byState, stateLL, by = "descrip")
+names(data)[3:4]<- c('lat','lng')
 
-str(df)
+library(leaflet)
+
+bound <- data.frame(quantile(data$Count))
+names(bound)[1] <- "quantile"
+
+getColor <- function(bound) {
+  sapply(bound$quantile, function(bound) {
+    if(bound <= 5) {
+      "green"
+    } else if(bound <= 1060) {
+      "orange"
+    } else {
+      "red"
+    } })
+}
+
+icons <- awesomeIcons(
+  icon = 'ios-close',
+  iconColor = 'black',
+  library = 'ion',
+  markerColor = getColor(bound)
+)
+
+
+data %>%
+  leaflet() %>%
+  addTiles() %>% 
+  addAwesomeMarkers(lat = data$lat, lng=data$lng,icon=icons, popup=as.character(data$Count))
+
